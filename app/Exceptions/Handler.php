@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
@@ -33,5 +35,27 @@ class Handler extends ExceptionHandler
     public function register()
     {
         //
+    }
+
+    protected function invalidJson($request, ValidationException $exception)
+    {
+        $title = $exception->getMessage();
+        $errors = [];
+
+        foreach ($exception->errors() as $field => $message) {
+            $pointer = "/".str_replace('.', '/', $field);
+
+            $errors[] = [
+                'title' => $title,
+                    'detail' => $message[0],
+                    'source' => [
+                        'pointer' => $pointer
+                    ],
+            ]; 
+        }
+
+        return response()->json([
+            'errors' => $errors
+        ], 422);
     }
 }
